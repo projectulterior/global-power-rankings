@@ -126,7 +126,6 @@ print("parsed:", len(flat))
 print("skipped:", skipped)
 print("total:", len(flat)+skipped)       
 
-
 def write(filename, data):
     b = json.dumps(data, indent=4).encode('utf-8')
     fd = os.open(filename, os.O_WRONLY | os.O_CREAT)
