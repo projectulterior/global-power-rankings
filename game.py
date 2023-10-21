@@ -29,6 +29,7 @@ for t in tournaments:
 
                     gameData[gameID]['winner'] = 'blue' if game['teams'][0]['result']['outcome'] == 'win' else 'red'
 
+print(len(gameData))
 
 data_bytes = json.dumps(gameData).encode('utf-8')
 fd = os.open('flat_games.json', os.O_WRONLY | os.O_CREAT)
