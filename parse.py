@@ -66,10 +66,13 @@ for section in exploded.iterrows():
         print("games\n", games)
 
         teams = games.explode("teams")
-        print("teams\n", teams)
+        # print("teams\n", teams)
 
-        
+        for team in teams.iterrows():
+            t = team[1]["teams"]
 
+            team = pd.json_normalize(t)
+            print("team\n", team)
 
     0/0
 
