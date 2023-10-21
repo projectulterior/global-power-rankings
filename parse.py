@@ -10,7 +10,7 @@ FILES = [
     'tournaments.json',
 ]
 
-OUTPUT = "games.json"
+OUTPUT = "data/games.json"
 
 def parse(filename):
     f = open(filename)

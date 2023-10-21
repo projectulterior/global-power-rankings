@@ -31,4 +31,7 @@ esports-data/mapping_data.json.gz
 ```
 
 [Technical Doc](https://docs.google.com/document/d/1wFRehKMJkkRR5zyjEZyaVL9H3ZbhP7_wP0FBE5ID40c/edit#heading=h.4osafmixo0au)
+
 [Athena Setup](https://docs.google.com/document/d/14uhbMUYb7cR_Hg6UWjlAgnN-hSy0ymhz19-_A6eidxI/edit#heading=h.mn6lxq2agqoh)
+
+[S3 Bucket](https://s3.console.aws.amazon.com/s3/buckets/power-rankings-dataset-gprhack)
