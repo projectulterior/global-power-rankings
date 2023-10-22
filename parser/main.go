@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"time"
+	"sync"
 )
 
 const (
@@ -17,16 +18,41 @@ const (
 func main() {
 	games := parse[[]map[string]any](GAMES_FILE)
 
-	for _, game := range games {
-		gameID := game["id"].(string)
+	var wg sync.WaitGroup
+	sema := make(chan struct{}, 30)
 
-		data, err := analyze(getGame(gameID))
-		if err != nil {
-			panic(err)
+	start := time.Now()
+
+	for i, g := range games {
+		wg.Add(1)
+		sema <- struct{}{}
+		go func(game map[string]any) {
+			defer wg.Done()
+			defer func() {<-sema}()
+			defer func() {
+				if r := recover(); r != nil {
+					fmt.Println(r)
+				}
+			}()
+
+			start := time.Now()
+			
+			gameID := game["id"].(string)
+			
+			_, err := analyze(getGame(gameID))
+			if err != nil {
+				panic(err)
+			}
+			
+			fmt.Printf("game analyzed -- %s\n", time.Now().Sub(start).String())
+		}(g)
+
+		if i % 10  == 0 {
+			fmt.Printf("checkpoint -- %d -- %s\n", i, time.Now().Sub(start).String())
 		}
-
-		fmt.Print(data)
 	}
+
+	wg.Wait()
 }
 
 func parse[T any](path string) T {
@@ -70,10 +96,10 @@ func getGame(gameID string) Events {
 
 func analyze(events Events) (*Game, error) {
 	game := Game{
-		Start: startTime(events),
-		End:   endTime(events),
+		Start: events[0].EventTime(),
+		End: events[0].EventTime(), 
 	}
-
+	
 	for i, event := range events {
 		t, ok := event["eventType"].(string)
 		if !ok {
@@ -108,40 +134,25 @@ func analyze(events Events) (*Game, error) {
 		case SURRENDER_VOTE_START:
 		case SURRENDER_FAILED_VOTES:
 		case SURRENDER_VOTE:
+		case SURRENDER_AGREED:
+		case CHAMPION_REVIVED:
+		case CHAMPION_TRANSFORMED:
+		case UNANIMOUS_SURRENDER_VOTE_START:
 		default:
 			panic(fmt.Sprintf("unknown event type: %s", t))
 		}
 
 		// fmt.Printf("event type %s\n", eventType)
+
+		eventTime := event.EventTime()
+
+		if eventTime.Before(game.Start) {
+			game.Start = eventTime
+		}
+		if eventTime.After(game.End) {
+			game.End = eventTime
+		}
 	}
 
 	return &game, nil
-}
-
-func startTime(events Events) time.Time {
-	start := events[0].EventTime()
-
-	for _, event := range events {
-		t := event.EventTime()
-
-		if t.Before(start) {
-			start = event.EventTime()
-		}
-	}
-
-	return start
-}
-
-func endTime(events Events) time.Time {
-	start := events[0].EventTime()
-
-	for _, event := range events {
-		t := event.EventTime()
-
-		if t.After(start) {
-			start = event.EventTime()
-		}
-	}
-
-	return start
 }

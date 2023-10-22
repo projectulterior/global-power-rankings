@@ -36,6 +36,10 @@ const (
 	SURRENDER_VOTE_START      EventType = "surrenderVoteStart"
 	SURRENDER_FAILED_VOTES    EventType = "surrenderFailedVotes"
 	SURRENDER_VOTE            EventType = "surrenderVote"
+	SURRENDER_AGREED EventType = "surrenderAgreed"
+	CHAMPION_REVIVED EventType = "champion_revived"
+	CHAMPION_TRANSFORMED EventType = "champion_transformed"
+	UNANIMOUS_SURRENDER_VOTE_START EventType "unanimousSurrenderVoteStart"
 )
 
 func (e Event) EventTime() time.Time {
