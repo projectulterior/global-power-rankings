@@ -64,14 +64,13 @@ func main() {
 
 		count++
 
-		if count%10 == 0 {
+		if count%100 == 0 {
 			fmt.Printf("count: %d -- %s\n", count, time.Now().Sub(start).String())
-			start = time.Now()
-			break
 		}
 	}
 
 	wg.Wait()
+	fmt.Printf("count: %d -- %s\n", count, time.Now().Sub(start).String())
 
 	b, err := json.Marshal(skipped)
 	if err != nil {
