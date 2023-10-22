@@ -7,21 +7,22 @@ eloGen = EloGenerator()
 teamDB = EloDB()
 regionDB = EloDB()
 
-INIT_K = 8
+INIT_K = 4
 MIN_K = 4
 DECAY_RATE = math.e
 DEFAULT_ELO = 1500
 
-MAIN_PATH = '../../data/'
+MAIN_PATH = './data/'
 TOURNAMENT_PATH = MAIN_PATH + 'tournaments.json'
 TEAM_PATH = MAIN_PATH + 'teams.json'
 GAME_PATH = MAIN_PATH + 'games.json'
-REGION_PATH = MAIN_PATH + 'team_regions.json'
+REGION_PATH = MAIN_PATH + 'team_region.json'
 
 REGION_K = 4
 
 games = getFile(GAME_PATH)
-games.sort(key=lambda x: x['end_time'])
+# TODO: change back to end_time
+games.sort(key=lambda x: x['tournament_endDate'])
 teams = getFile(TEAM_PATH)
 regions = getFile(REGION_PATH)
 
@@ -40,27 +41,31 @@ for game in games:
     redRegionELO = redRegionELO if redRegionELO is not None else DEFAULT_ELO
     blueRegionELO = regionDB.getCurrent(blueRegion)
     blueRegionELO = blueRegionELO if blueRegionELO is not None else DEFAULT_ELO
-    minELO = min(regionDB.getAll().values(), key=lambda x: x['elo'])['elo']
+    minELO = min(regionDB.getAll().values(), key=lambda x: x['elo'])['elo'] if len(regionDB.getAll()) > 0 else DEFAULT_ELO
     blueRegionBuff = blueRegionELO - minELO
     redRegionBuff = redRegionELO - minELO
 
-    currentRedElo = (teamDB.getCurrent(redTeam) if redTeam in teamDB.eloDB else DEFAULT_ELO)
-    currentBlueElo = (teamDB.getCurrent(blueTeam) if blueTeam in teamDB.eloDB else DEFAULT_ELO)
+    currentRedElo = (teamDB.getCurrent(redTeam)['elo'] if redTeam in teamDB.eloDB else DEFAULT_ELO)
+    currentBlueElo = (teamDB.getCurrent(blueTeam)['elo'] if blueTeam in teamDB.eloDB else DEFAULT_ELO)
     # NOTE: only the opponent's region buff is added to the current elo
     # this is because if we update both, the elo will be inflated since we will be adding every single time
-    newBlueELO = eloGen.generate(currentBlueElo, currentRedElo + redRegionBuff, winner is 'blue', kFactor_BLUE)
-    newRedELO = eloGen.generate(currentRedElo, currentBlueElo + blueRegionBuff, winner is 'red', kFactor_RED)
+    newBlueELO = eloGen.generate(currentBlueElo, currentRedElo + redRegionBuff, winner == 'blue', kFactor_BLUE)
+    newRedELO = eloGen.generate(currentRedElo, currentBlueElo + blueRegionBuff, winner == 'red', kFactor_RED)
 
-    teamDB.insert(redTeam, game['end_time'], newRedELO)
-    teamDB.insert(blueTeam, game['end_time'], newBlueELO)
+    # TODO: change back to end_time
+    teamDB.insert(redTeam, game['tournament_endDate'], newRedELO)
+    teamDB.insert(blueTeam, game['tournament_endDate'], newBlueELO)
 
-    newBlueRegionELO = eloGen.generate(blueRegionELO, redRegionELO, winner is 'blue', REGION_K)
-    newRedRegionELO = eloGen.generate(redRegionELO, blueRegionELO, winner is 'red', REGION_K)
-    regionDB.insert(redRegion, game['end_time'], newRedRegionELO)
-    regionDB.insert(blueRegion, game['end_time'], newBlueRegionELO)
+    # newBlueRegionELO = eloGen.generate(blueRegionELO, redRegionELO, winner is 'blue', REGION_K)
+    # newRedRegionELO = eloGen.generate(redRegionELO, blueRegionELO, winner is 'red', REGION_K)
+    # regionDB.insert(redRegion, game['end_time'], newRedRegionELO)
+    # regionDB.insert(blueRegion, game['end_time'], newBlueRegionELO)
 
-TEAM_ELO_PATH = MAIN_PATH + 'elo.json'
-REGION_ELO_PATH = MAIN_PATH + 'region_elo.json'
+    gameCount[blueTeam] = gameCount[blueTeam] + 1 if blueTeam in gameCount else 1
+    gameCount[redTeam] = gameCount[redTeam] + 1 if redTeam in gameCount else 1
+
+TEAM_ELO_PATH = MAIN_PATH + 'elo/elo.json'
+REGION_ELO_PATH = MAIN_PATH + 'elo/region_elo.json'
 teamDB.flush(TEAM_ELO_PATH)
 regionDB.flush(REGION_ELO_PATH)
 
