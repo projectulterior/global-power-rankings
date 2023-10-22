@@ -22,7 +22,10 @@ Top
 Jungle
 - Barons and dragons compared to other jungler
 - Kill participation at 15 min/ 25 min
-- 
+- CS count at 5 min / 15 min / 25 min / end
+- Vision score
+- Turret plating gold received
+- Enemy jungle camps taken
 
 Mid
 - 
