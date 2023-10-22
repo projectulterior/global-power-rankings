@@ -1,4 +1,5 @@
 import sys
+from file import read, write
 import os
 import json
 import pandas as pd
@@ -12,16 +13,10 @@ FILES = [
 
 OUTPUT = "data/games.json"
 
-def parse(filename):
-    f = open(filename)
-    data = json.load(f)
-    f.close()
-    return data
-
-leagues = parse('data/leagues.json')
-players = parse('data/player.json')
-teams = parse('data/teams.json')
-tournaments = parse('data/tournaments.json')
+leagues = read('data/leagues.json')
+players = read('data/player.json')
+teams = read('data/teams.json')
+tournaments = read('data/tournaments.json')
 
 def update(dest, obj, prefix):
     for key, value in obj.items():
@@ -125,11 +120,5 @@ for tournament in tournaments:
 print("parsed:", len(flat))
 print("skipped:", skipped)
 print("total:", len(flat)+skipped)       
-
-def write(filename, data):
-    b = json.dumps(data, indent=4).encode('utf-8')
-    fd = os.open(filename, os.O_WRONLY | os.O_CREAT)
-    os.write(fd, b)
-    os.close(fd)
 
 write(OUTPUT, flat)

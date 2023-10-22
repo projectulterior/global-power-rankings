@@ -10,3 +10,8 @@ parse:
 games:
 	mkdir -p data/games
 	go run games.go
+
+.PHONY: parser
+
+parser:
+	cd parser && go run ./...
