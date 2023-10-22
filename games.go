@@ -21,7 +21,7 @@ const (
 
 	OUTPUT_PATH = "data/games"
 
-	WORKERS = 10
+	WORKERS = 50
 )
 
 func main() {
