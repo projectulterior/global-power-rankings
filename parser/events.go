@@ -26,20 +26,21 @@ const (
 	WARD_PLACED            EventType = "ward_placed"
 
 	// more events
-	QUEUED_EPIC_MONSTER_INFO  EventType = "queued_epic_monster_info"
-	QUEUED_DRAGON_INFO        EventType = "queued_dragon_info"
-	EPIC_MONSTER_SPAWN        EventType = "epic_monster_spawn"
-	TURRET_PLATE_GOLD_EARNED  EventType = "turret_plate_gold_earned"
-	ITEM_UNDO                 EventType = "item_undo"
-	OBJECTIVE_BOUNTY_PRESTART EventType = "objective_bounty_prestart"
-	OBJECTIVE_BOUNTY_FINISH   EventType = "objective_bounty_finish"
-	SURRENDER_VOTE_START      EventType = "surrenderVoteStart"
-	SURRENDER_FAILED_VOTES    EventType = "surrenderFailedVotes"
-	SURRENDER_VOTE            EventType = "surrenderVote"
-	SURRENDER_AGREED EventType = "surrenderAgreed"
-	CHAMPION_REVIVED EventType = "champion_revived"
-	CHAMPION_TRANSFORMED EventType = "champion_transformed"
-	UNANIMOUS_SURRENDER_VOTE_START EventType "unanimousSurrenderVoteStart"
+	QUEUED_EPIC_MONSTER_INFO       EventType = "queued_epic_monster_info"
+	QUEUED_DRAGON_INFO             EventType = "queued_dragon_info"
+	EPIC_MONSTER_SPAWN             EventType = "epic_monster_spawn"
+	TURRET_PLATE_GOLD_EARNED       EventType = "turret_plate_gold_earned"
+	ITEM_UNDO                      EventType = "item_undo"
+	OBJECTIVE_BOUNTY_PRESTART      EventType = "objective_bounty_prestart"
+	OBJECTIVE_BOUNTY_FINISH        EventType = "objective_bounty_finish"
+	SURRENDER_VOTE_START           EventType = "surrenderVoteStart"
+	SURRENDER_FAILED_VOTES         EventType = "surrenderFailedVotes"
+	SURRENDER_VOTE                 EventType = "surrenderVote"
+	SURRENDER_AGREED               EventType = "surrenderAgreed"
+	CHAMPION_REVIVED               EventType = "champion_revived"
+	CHAMPION_TRANSFORMED           EventType = "champion_transformed"
+	UNANIMOUS_SURRENDER_VOTE_START EventType = "unanimousSurrenderVoteStart"
+	CHAMP_SELECT                   EventType = "champ_select"
 )
 
 func (e Event) EventTime() time.Time {
@@ -50,7 +51,19 @@ func (e Event) EventTime() time.Time {
 
 	t, err := time.Parse("2006-01-02T15:04:05.999Z", s)
 	if err != nil {
-		panic(err)
+		t, err = time.Parse("2006-01-02T15:04:05.99Z", s)
+		if err != nil {
+			t, err = time.Parse("2006-01-02T15:04:05.9Z", s)
+			if err != nil {
+				t, err = time.Parse("2006-01-02T15:04:05Z", s)
+				if err != nil {
+					t, err = time.Parse("2006-01-02T15:04Z", s)
+					if err != nil {
+						panic(err)
+					}
+				}
+			}
+		}
 	}
 
 	return t

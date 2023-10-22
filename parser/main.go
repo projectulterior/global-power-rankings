@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 	"sync"
+	"time"
 )
 
 const (
@@ -16,49 +16,55 @@ const (
 )
 
 func main() {
-	games := parse[[]map[string]any](GAMES_FILE)
+	games := parse[map[string]any](GAMES_FILE)
 
 	var wg sync.WaitGroup
 	sema := make(chan struct{}, 30)
 
 	start := time.Now()
 
-	for i, g := range games {
+	for i, g := range games[900:] {
 		wg.Add(1)
 		sema <- struct{}{}
 		go func(game map[string]any) {
 			defer wg.Done()
-			defer func() {<-sema}()
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Println(r)
-				}
-			}()
+			defer func() { <-sema }()
+			// defer func() {
+			// 	if r := recover(); r != nil {
+			// 		fmt.Println(r)
+			// 	}
+			// }()
 
 			start := time.Now()
-			
+
 			gameID := game["id"].(string)
-			
-			_, err := analyze(getGame(gameID))
-			if err != nil {
-				panic(err)
+
+			data := getGame(gameID)
+			if len(data) == 0 {
+				fmt.Println("no file found")
+				return
 			}
-			
-			fmt.Printf("game analyzed -- %s\n", time.Now().Sub(start).String())
+
+			_, err := analyze(data)
+			if err != nil {
+				panic(fmt.Sprintf("%s -- %s\n", gameID, err.Error()))
+			}
+
+			fmt.Printf("game analyzed -- %s\n", time.Since(start))
 		}(g)
 
-		if i % 10  == 0 {
-			fmt.Printf("checkpoint -- %d -- %s\n", i, time.Now().Sub(start).String())
+		if i%100 == 0 {
+			fmt.Printf("checkpoint -- %d -- %s\n", i, time.Since(start))
 		}
 	}
 
 	wg.Wait()
 }
 
-func parse[T any](path string) T {
+func parse[T any](path string) []T {
 	file, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	defer file.Close()
 
@@ -68,7 +74,7 @@ func parse[T any](path string) T {
 		panic(err)
 	}
 
-	var data T
+	var data []T
 	err = json.Unmarshal(buf.Bytes(), &data)
 	if err != nil {
 		panic(err)
@@ -91,15 +97,15 @@ func write(path string, reader io.Reader) {
 }
 
 func getGame(gameID string) Events {
-	return parse[Events](fmt.Sprintf("%s/%s.json", GAMES_DIRECTIORY, gameID))
+	return parse[Event](fmt.Sprintf("%s/%s.json", GAMES_DIRECTIORY, gameID))
 }
 
 func analyze(events Events) (*Game, error) {
 	game := Game{
 		Start: events[0].EventTime(),
-		End: events[0].EventTime(), 
+		End:   events[0].EventTime(),
 	}
-	
+
 	for i, event := range events {
 		t, ok := event["eventType"].(string)
 		if !ok {
@@ -138,6 +144,7 @@ func analyze(events Events) (*Game, error) {
 		case CHAMPION_REVIVED:
 		case CHAMPION_TRANSFORMED:
 		case UNANIMOUS_SURRENDER_VOTE_START:
+		case CHAMP_SELECT:
 		default:
 			panic(fmt.Sprintf("unknown event type: %s", t))
 		}
