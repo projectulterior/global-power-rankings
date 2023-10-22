@@ -1,6 +1,9 @@
 package main
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type KDA struct {
 	Kill   int `json:"kill"`
@@ -69,6 +72,14 @@ type Game struct {
 	Red  Team `json:"red"`
 	Blue Team `json:"blue"`
 
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
+
 	FirstBlood           Side `json:"first_blood"`
 	FirstTurretDestroyed Side `json:"first_turret_destroyed"`
+}
+
+func (g Game) String() string {
+	b, _ := json.MarshalIndent(g, "", "    ")
+	return string(b)
 }

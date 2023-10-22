@@ -6,24 +6,35 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 const (
-	GAMES_DIRECTIORY = "../data/games/"
+	GAMES_DIRECTIORY = "../data/games"
 	GAMES_FILE       = "../data/games.json"
 )
 
 func main() {
-	gameID := "110733838936446929"
+	games := parse[[]map[string]any](GAMES_FILE)
 
-	analyze(getGame(gameID))
+	for _, game := range games {
+		gameID := game["id"].(string)
+
+		data, err := analyze(getGame(gameID))
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Print(data)
+	}
 }
 
-func getGame(gameID string) Events {
-	file, err := os.Open(fmt.Sprintf("%s/%s.json", GAMES_DIRECTIORY, gameID))
+func parse[T any](path string) T {
+	file, err := os.Open(path)
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, file)
@@ -31,7 +42,7 @@ func getGame(gameID string) Events {
 		panic(err)
 	}
 
-	var data []map[string]any
+	var data T
 	err = json.Unmarshal(buf.Bytes(), &data)
 	if err != nil {
 		panic(err)
@@ -40,11 +51,33 @@ func getGame(gameID string) Events {
 	return data
 }
 
-func analyze(events Events) error {
+func write(path string, reader io.Reader) {
+	file, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, reader)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func getGame(gameID string) Events {
+	return parse[Events](fmt.Sprintf("%s/%s.json", GAMES_DIRECTIORY, gameID))
+}
+
+func analyze(events Events) (*Game, error) {
+	game := Game{
+		Start: startTime(events),
+		End:   endTime(events),
+	}
+
 	for i, event := range events {
 		t, ok := event["eventType"].(string)
 		if !ok {
-			return fmt.Errorf("unable to parse event type: %d", i)
+			return nil, fmt.Errorf("unable to parse event type: %d", i)
 		}
 
 		eventType := EventType(t)
@@ -72,12 +105,43 @@ func analyze(events Events) error {
 		case ITEM_UNDO:
 		case OBJECTIVE_BOUNTY_PRESTART:
 		case OBJECTIVE_BOUNTY_FINISH:
+		case SURRENDER_VOTE_START:
+		case SURRENDER_FAILED_VOTES:
+		case SURRENDER_VOTE:
 		default:
 			panic(fmt.Sprintf("unknown event type: %s", t))
 		}
 
-		fmt.Printf("event type %s\n", eventType)
+		// fmt.Printf("event type %s\n", eventType)
 	}
 
-	return nil
+	return &game, nil
+}
+
+func startTime(events Events) time.Time {
+	start := events[0].EventTime()
+
+	for _, event := range events {
+		t := event.EventTime()
+
+		if t.Before(start) {
+			start = event.EventTime()
+		}
+	}
+
+	return start
+}
+
+func endTime(events Events) time.Time {
+	start := events[0].EventTime()
+
+	for _, event := range events {
+		t := event.EventTime()
+
+		if t.After(start) {
+			start = event.EventTime()
+		}
+	}
+
+	return start
 }

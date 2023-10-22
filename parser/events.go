@@ -1,6 +1,9 @@
 package main
 
-type Events []map[string]any
+import "time"
+
+type Event map[string]any
+type Events []Event
 
 type EventType string
 
@@ -30,4 +33,21 @@ const (
 	ITEM_UNDO                 EventType = "item_undo"
 	OBJECTIVE_BOUNTY_PRESTART EventType = "objective_bounty_prestart"
 	OBJECTIVE_BOUNTY_FINISH   EventType = "objective_bounty_finish"
+	SURRENDER_VOTE_START      EventType = "surrenderVoteStart"
+	SURRENDER_FAILED_VOTES    EventType = "surrenderFailedVotes"
+	SURRENDER_VOTE            EventType = "surrenderVote"
 )
+
+func (e Event) EventTime() time.Time {
+	s, ok := e["eventTime"].(string)
+	if !ok {
+		panic("error in parsing event time")
+	}
+
+	t, err := time.Parse("2006-01-02T15:04:05.999Z", s)
+	if err != nil {
+		panic(err)
+	}
+
+	return t
+}
