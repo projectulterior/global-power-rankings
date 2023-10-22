@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -23,21 +24,27 @@ func main() {
 
 	start := time.Now()
 
-	for i, g := range games[900:] {
+	var count atomic.Int32
+
+	for i, g := range games[24200:] {
 		wg.Add(1)
 		sema <- struct{}{}
 		go func(game map[string]any) {
 			defer wg.Done()
 			defer func() { <-sema }()
+
+			gameID := game["id"].(string)
 			// defer func() {
 			// 	if r := recover(); r != nil {
-			// 		fmt.Println(r)
+			// 		count.Add(1)
+			// 		fmt.Printf("errors: %d -- %s\n", count.Load(), gameID)
 			// 	}
 			// }()
 
-			start := time.Now()
+			// os.Remove(getGamePath(gameID))
+			// return
 
-			gameID := game["id"].(string)
+			start := time.Now()
 
 			data := getGame(gameID)
 			if len(data) == 0 {
@@ -59,6 +66,7 @@ func main() {
 	}
 
 	wg.Wait()
+	fmt.Printf("errors: %d\n", count.Load())
 }
 
 func parse[T any](path string) []T {
@@ -94,6 +102,10 @@ func write(path string, reader io.Reader) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getGamePath(gameID string) string {
+	return fmt.Sprintf("%s/%s.json", GAMES_DIRECTIORY, gameID)
 }
 
 func getGame(gameID string) Events {
