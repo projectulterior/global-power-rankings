@@ -23,7 +23,3 @@ type Team struct {
 type Game struct {
 	FirstTurretDestoryed Side `json:"first_turret_destoryed"`
 }
-
-func analyze() {
-
-}
