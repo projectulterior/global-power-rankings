@@ -1,14 +1,20 @@
 # Features
 Team
 - KDA per player/team
-- First Turret Destroyed
-- Turret plate gold ratio
-    - Total plating gold/950
-- Total gold
-    -Team gold/total game gold
+- First Turret Destroyed (which team)
+- Turret plate out of 5
+- Total gold per team
+- Gold Ratio between teams
+- Gold Lead Ratio between teams
 - XP per player compared to other team at 10 min/15 min/20 min
-- Turrets destroyed in the first 15 min/25 min destroyed compared to other team
-- 
+- XP lead ratio
+- Turrets destroyed ratio in the first 15 min/25 min
+
+Couterpart
+- kda lead ratio
+- gold lead ratio
+- turret plate ratio
+- kill participation
 
 Top
 - 
@@ -30,6 +36,7 @@ Adc
 
 Support
 - Wards placed
+    - vision score
 - Kill participation
 - 
 

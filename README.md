@@ -35,3 +35,18 @@ esports-data/mapping_data.json.gz
 [Athena Setup](https://docs.google.com/document/d/14uhbMUYb7cR_Hg6UWjlAgnN-hSy0ymhz19-_A6eidxI/edit#heading=h.mn6lxq2agqoh)
 
 [S3 Bucket](https://s3.console.aws.amazon.com/s3/buckets/power-rankings-dataset-gprhack)
+
+## Game Data
+
+Game data has been downloaded to an EC2 which can be accessed thru SSH.
+
+1. Download [`production.pem`](https://github.com/projectulterior/devops/blob/master/.keys/production.pem) and move it to your `~/.ssh` directory
+
+2. Copy the following in to your `~/.ssh/` profile
+```sh
+Host lol-games
+HostName 44.234.153.92
+User ec2-user
+IdentityFile ~/.ssh/production.pem
+```
+
