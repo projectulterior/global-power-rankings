@@ -42,11 +42,11 @@ Game data has been downloaded to an EC2 which can be accessed thru SSH.
 
 1. Download [`production.pem`](https://github.com/projectulterior/devops/blob/master/.keys/production.pem) and move it to your `~/.ssh` directory
 
-2. Copy the following in to your `~/.ssh/` profile
+2. Copy the following in to your `~/.ssh/config` file
 ```sh
 Host lol-games
-HostName 44.234.153.92
-User ec2-user
-IdentityFile ~/.ssh/production.pem
+    HostName 44.234.153.92
+    User ec2-user
+    IdentityFile ~/.ssh/production.pem
 ```
 
