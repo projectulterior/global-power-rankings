@@ -58,8 +58,7 @@ func main() {
 				return
 			}
 
-			g := getGame(context.Background(), pid)
-			save(fmt.Sprintf("%s/%s.json", OUTPUT_PATH, gid), g)
+			getGame(context.Background(), pid, fmt.Sprintf("%s/%s.json", OUTPUT_PATH, gid))
 		}(game)
 
 		count++
@@ -115,7 +114,13 @@ func platformID(mapping []map[string]any, gameID string) (string, error) {
 	return "", fmt.Errorf("platform id not found: " + gameID)
 }
 
-func getGame(ctx context.Context, plaformID string) io.Reader {
+func getGame(ctx context.Context, plaformID, path string) {
+	if _, err := os.Open(path); err == nil {
+		// already exists
+		fmt.Println("already exists")
+		return
+	}
+
 	url := fmt.Sprintf("%s/games/%s.json.gz", S3, plaformID)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -140,7 +145,7 @@ func getGame(ctx context.Context, plaformID string) io.Reader {
 		panic(err)
 	}
 
-	return &buf
+	save(path, &buf)
 }
 
 func save(path string, reader io.Reader) {
