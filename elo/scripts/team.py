@@ -15,14 +15,15 @@ DEFAULT_ELO = 1500
 MAIN_PATH = './data/'
 TOURNAMENT_PATH = MAIN_PATH + 'tournaments.json'
 TEAM_PATH = MAIN_PATH + 'teams.json'
-GAME_PATH = MAIN_PATH + 'games.json'
+GAME_PATH = MAIN_PATH + 'games_ts.json'
 REGION_PATH = MAIN_PATH + 'team_region.json'
 
 REGION_K = 4
 
 games = getFile(GAME_PATH)
 # TODO: change back to end_time
-games.sort(key=lambda x: x['tournament_endDate'])
+games = list(filter(lambda x: x.get('end_time') is not None, games))
+games.sort(key=lambda x: x['end_time'])
 teams = getFile(TEAM_PATH)
 regions = getFile(REGION_PATH)
 
@@ -53,8 +54,8 @@ for game in games:
     newRedELO = eloGen.generate(currentRedElo, currentBlueElo + blueRegionBuff, winner == 'red', kFactor_RED)
 
     # TODO: change back to end_time
-    teamDB.insert(redTeam, game['tournament_endDate'], newRedELO)
-    teamDB.insert(blueTeam, game['tournament_endDate'], newBlueELO)
+    teamDB.insert(redTeam, game['end_time'], newRedELO)
+    teamDB.insert(blueTeam, game['end_time'], newBlueELO)
 
     # newBlueRegionELO = eloGen.generate(blueRegionELO, redRegionELO, winner is 'blue', REGION_K)
     # newRedRegionELO = eloGen.generate(redRegionELO, blueRegionELO, winner is 'red', REGION_K)
