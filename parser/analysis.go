@@ -11,29 +11,67 @@ type KDA struct {
 	Assist int `json:"assist"`
 }
 
-type Ratio float32
+type Ratio struct {
+	last      time.Time
+	durations map[Side]time.Duration
+}
+
+func (r *Ratio) Add(side Side, now time.Time) {
+	dur := now.Sub(r.last)
+	r.durations[side] += dur
+	r.last = now
+}
+
+func (r *Ratio) Get(side Side) float32 {
+	var this float32
+	var total float32
+	for s, dur := range r.durations {
+		if s == side {
+			this = float32(dur.Milliseconds())
+		}
+
+		total += float32(dur.Milliseconds())
+	}
+
+	return this / total
+}
 
 type Role string
 
-type Count int
+type Count struct {
+	count int
+	last  time.Time
+}
+
+func (c *Count) Set(value int, now time.Time) {
+	if now.After(c.last) {
+		c.count = value
+	}
+}
+
+func (c *Count) Get() int {
+	return c.count
+}
 
 type Duration time.Duration
 
 type Player struct {
-	Role `json:"role"`
+	Champion string `json:"champion"`
+	Role     `json:"role"`
 	KDA
-	KDARatio             Ratio `json:"kda_ratio"`
-	VisionScore          Count `json:"vision_score"`
-	Cs                   Count `json:"cs"`
-	CsRatio              Ratio `json:"cs_ratio"`
-	XP                   Count `json:"xp"`
-	XPRatio              Ratio `json:"xp_ratio"`
-	ObjectiveDamage      Count `json:"objective_damage"`
-	ObjectiveDamageRatio Ratio `json:"objective_damage_ratio"`
-	TurretPlateGold      Count `json:"turret_plate_gold"`
-	TurretPlateGoldRatio Ratio `json:"turret_plate_gold_ratio"`
-	TurretDestroyed      Count `json:"turret_destroyed"`
-	TurretDestroyedRatio Ratio `json:"turret_destroyed_ratio"`
+	KDARatio             Ratio    `json:"kda_ratio"`
+	VisionScore          Count    `json:"vision_score"`
+	CS                   Count    `json:"cs"`
+	CSRatio              Ratio    `json:"cs_ratio"`
+	XP                   Count    `json:"xp"`
+	XPRatio              Ratio    `json:"xp_ratio"`
+	ObjectiveDamage      Count    `json:"objective_damage"`
+	ObjectiveDamageRatio Ratio    `json:"objective_damage_ratio"`
+	TurretPlateGold      Count    `json:"turret_plate_gold"`
+	TurretPlateGoldRatio Ratio    `json:"turret_plate_gold_ratio"`
+	TurretDestroyed      Count    `json:"turret_destroyed"`
+	TurretDestroyedRatio Ratio    `json:"turret_destroyed_ratio"`
+	MaxLevel             Duration `json:"max_level"`
 }
 
 type Top struct {
@@ -57,6 +95,10 @@ type Support struct {
 }
 
 type Side string // red or blue
+const (
+	RED  Side = "red"
+	BLUE Side = "blue"
+)
 
 type Team struct {
 	KDA

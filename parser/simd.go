@@ -17,6 +17,7 @@ const WORKERS = 30
 
 func run() {
 	games := parse[map[string]any](GAMES_FILE)
+	mapping := parse[map[string]any](MAPPING_FILE)
 
 	var wg sync.WaitGroup
 	sema := make(chan struct{}, WORKERS)
@@ -24,10 +25,10 @@ func run() {
 	var count atomic.Int32
 
 	start := time.Now()
-	for i, g := range games {
+	for i, g := range games[:100] {
 		wg.Add(1)
 		sema <- struct{}{}
-		go func(index int, game map[string]any) {
+		go func(index int, game map[string]any, mapping []map[string]any) {
 			defer wg.Done()
 			defer func() { <-sema }()
 
@@ -53,7 +54,7 @@ func run() {
 			currentGame := games[index]
 			currentGame["start_time"] = gameTimes.Start
 			currentGame["end_time"] = gameTimes.End
-		}(i, g)
+		}(i, g, mapping)
 
 		if i%100 == 0 {
 			fmt.Printf("checkpoint -- %d -- %s\n", i, time.Since(start))
