@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -12,19 +13,38 @@ import (
 	simd "github.com/minio/simdjson-go"
 )
 
+const WORKERS = 30
+
 func run() {
 	games := parse[map[string]any](GAMES_FILE)
 
 	var wg sync.WaitGroup
-	sema := make(chan struct{}, 100)
+	sema := make(chan struct{}, WORKERS)
 
 	var count atomic.Int32
 
+	// data := make(chan *Game, WORKERS)
+	// go func() {
+	// 	toRet := []map[string]any{}
+	// 	for game := range data {
+	// 		currentGame := games[i]
+	// 		game["start_time"] = gameTimes.Start
+	// 		game["end_time"] = gameTimes.End
+	// 	}
+
+	// 	b, err := json.Marshal(games)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	write(OUTPUT_PATH, bytes.NewBuffer(b))
+	// }()
+
 	start := time.Now()
-	for i, g := range games {
+	for i, g := range games[:100] {
 		wg.Add(1)
 		sema <- struct{}{}
-		go func(game map[string]any) {
+		go func(index int, game map[string]any) {
 			defer wg.Done()
 			defer func() { <-sema }()
 
@@ -42,15 +62,29 @@ func run() {
 				return
 			}
 
-			simdAnal(*parsed)
-		}(g)
+			gameTimes, err := simdAnal(*parsed)
+			if err != nil {
+				fmt.Printf("analysis error -- %s\n", err)
+			}
+
+			currentGame := games[index]
+			currentGame["start_time"] = gameTimes.Start
+			currentGame["end_time"] = gameTimes.End
+		}(i, g)
 
 		if i%100 == 0 {
 			fmt.Printf("checkpoint -- %d -- %s\n", i, time.Since(start))
 		}
 	}
 	wg.Wait()
+	// close(data)
 
+	b, err := json.Marshal(games)
+	if err != nil {
+		panic(err)
+	}
+
+	write(OUTPUT_PATH, bytes.NewBuffer(b))
 	fmt.Printf("errors: %d -- %s\n", count.Load(), time.Since(start))
 	fmt.Println("------------")
 }

@@ -16,6 +16,7 @@ import (
 const (
 	GAMES_DIRECTIORY = "../data/games"
 	GAMES_FILE       = "../data/games.json"
+	OUTPUT_PATH      = "../data/games_ts.json"
 )
 
 func main() {
@@ -187,9 +188,29 @@ func analyze(events Events) (*Game, error) {
 func simdAnal(events simdjson.ParsedJson) (*Game, error) {
 	game := Game{}
 
-	events.ForEach(func(i simdjson.Iter) error {
+	eventsIter := events.Iter()
+	typ := eventsIter.Advance()
+	fmt.Printf("type %s\n", typ)
+
+	rt, arrIter, err := eventsIter.Root(nil)
+	fmt.Printf("root type %s\n", rt)
+
+	gameArr, err := arrIter.Array(nil)
+	fmt.Printf("element -- %s\n", gameArr.FirstType().String())
+
+	err = events.ForEach(func(i simdjson.Iter) error {
+		// element, err := i.Array(nil)
+		// if err != nil {
+		// 	fmt.Printf("element error -- %s\n", err)
+		// 	return err
+		// }
+
+		// fmt.Printf("element -- %s\n", element.FirstType().String())
+
 		switch i.Type() {
 		case simdjson.TypeObject:
+			fmt.Println("steven")
+
 			obj, _ := i.Object(nil)
 			el := obj.FindKey("eventType", nil)
 			eventType, err := el.Iter.String()
@@ -236,8 +257,10 @@ func simdAnal(events simdjson.ParsedJson) (*Game, error) {
 			el = obj.FindKey("eventTime", nil)
 			eventTime, err := el.Iter.String()
 			if err != nil {
+				fmt.Println("here:" + err.Error())
 				return err
 			}
+			fmt.Printf("eventTime: %s\n", eventTime)
 
 			t := EventTimeSIMD(eventTime)
 			if game.Start.IsZero() && game.End.IsZero() {
@@ -252,8 +275,13 @@ func simdAnal(events simdjson.ParsedJson) (*Game, error) {
 			}
 		}
 
+		// fmt.Println("here")
+
 		return nil
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	return &game, nil
 }
