@@ -68,3 +68,24 @@ func (e Event) EventTime() time.Time {
 
 	return t
 }
+
+func EventTimeSIMD(eventTime string) time.Time {
+	t, err := time.Parse("2006-01-02T15:04:05.999Z", eventTime)
+	if err != nil {
+		t, err = time.Parse("2006-01-02T15:04:05.99Z", eventTime)
+		if err != nil {
+			t, err = time.Parse("2006-01-02T15:04:05.9Z", eventTime)
+			if err != nil {
+				t, err = time.Parse("2006-01-02T15:04:05Z", eventTime)
+				if err != nil {
+					t, err = time.Parse("2006-01-02T15:04Z", eventTime)
+					if err != nil {
+						panic(err)
+					}
+				}
+			}
+		}
+	}
+
+	return t
+}
