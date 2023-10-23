@@ -103,8 +103,6 @@ func analyze(events simdjson.ParsedJson) (*Game, error) {
 }
 
 func stats_update(game *Game, obj *simdjson.Object) {
-	fmt.Println("stats_update")
-
 	p := obj.FindKey("participants", nil)
 
 	participants, err := p.Iter.Array(nil)
@@ -130,5 +128,44 @@ func stats_update(game *Game, obj *simdjson.Object) {
 			panic(err)
 		}
 		fmt.Println(participantID)
+
+	}
+}
+
+func analyze_stats(game *Game, obj *simdjson.Object) {
+	s := obj.FindKey("stats", nil)
+	stats, err := s.Iter.Array(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	iter := stats.Iter()
+	for {
+		typ := iter.Advance()
+		if typ != simdjson.TypeObject {
+			break
+		}
+
+		obj, err := iter.Object(nil)
+		if err != nil {
+			break
+		}
+
+		n := obj.FindKey("name", nil)
+		name, err := n.Iter.String()
+		if err != nil {
+			panic(err)
+		}
+
+		switch name {
+		case "CHAMPIONS_KILLED":
+			v := obj.FindKey("vale", nil)
+			value, err := v.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Println("champion killed", value)
+		}
 	}
 }
