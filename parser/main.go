@@ -12,7 +12,7 @@ const (
 	GAMES_DIRECTIORY = "../data/games"
 	GAMES_FILE       = "../data/games.json"
 	MAPPING_FILE     = "../data/mapping_data.json"
-	OUTPUT_PATH      = "../data/games_ts.json"
+	OUTPUT_PATH      = "../data/games_full.json"
 )
 
 func main() {

@@ -125,7 +125,7 @@ func stats_update(game *Game, obj *simdjson.Object) {
 		}
 
 		e := obj.FindKey("participantID", nil)
-		participantID, err := e.Iter.String()
+		participantID, err := e.Iter.Int()
 		if err != nil {
 			panic(err)
 		}
