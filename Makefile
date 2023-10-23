@@ -11,7 +11,7 @@ games:
 	mkdir -p data/games
 	go run games.go
 
-.PHONY: parser elo benchmark
+.PHONY: parser fast elo benchmark
 
 parser:
 	cd parser && go run ./...
@@ -23,3 +23,6 @@ elo:
 
 benchmark:
 	cd parser && go test -bench ./...
+
+fast:
+	cd fast && go run ./...
