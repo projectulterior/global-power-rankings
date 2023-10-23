@@ -41,7 +41,7 @@ func run() {
 	// }()
 
 	start := time.Now()
-	for i, g := range games[:100] {
+	for i, g := range games {
 		wg.Add(1)
 		sema <- struct{}{}
 		go func(index int, game map[string]any) {
