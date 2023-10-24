@@ -102,9 +102,10 @@ for game in games:
         redRegionBuff *= BUFF_MULTIPLER
 
     currentRedMU = (teamDB.getCurrent(redTeam)['elo'] if redTeam in teamDB.eloDB else initELO[redTeam] if redTeam in initELO else INIT_MU)
-    # currentRedMU = (teamDB.getCurrent(redTeam)['elo'] if redTeam in teamDB.eloDB else INIT_MU)
     currentBlueMU = (teamDB.getCurrent(blueTeam)['elo'] if blueTeam in teamDB.eloDB else initELO[blueTeam] if blueTeam in initELO else INIT_MU)
+    # currentRedMU = (teamDB.getCurrent(redTeam)['elo'] if redTeam in teamDB.eloDB else INIT_MU)
     # currentBlueMU = (teamDB.getCurrent(blueTeam)['elo'] if blueTeam in teamDB.eloDB else INIT_MU)
+
     currentRedSIGMA = (teamDB.getCurrent(redTeam)['metadata']['sigma'] if redTeam in teamDB.eloDB else INIT_SIGMA)
     currentBlueSIGMA = (teamDB.getCurrent(blueTeam)['metadata']['sigma'] if blueTeam in teamDB.eloDB else INIT_SIGMA)
     buffedRedELO = Rating(currentRedMU + redRegionBuff, currentRedSIGMA)

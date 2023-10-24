@@ -17,12 +17,12 @@ WEIGHTS = {
     'westernRegionGamesTier2': 2,
     'easternRegionWinsTier2': 3,
     'westernRegionWinsTier2': 2,
-    'topKDA': 1,
-    'jungleKDA': 2,
-    'midKDA': 3,
-    'adcKDA': 4,
-    'supportKDA': 5,
-    'teamGold': 6,
+    'topKDA': 0,
+    'jungleKDA': 0,
+    'midKDA': 0,
+    'adcKDA': 0,
+    'supportKDA': 0,
+    'teamGold': 0,
 }
 
 worlds = set(["108998961191900167", "106926282333089592", "104841804583318464"])
@@ -181,8 +181,8 @@ def createInitialScores():
     appearances = getAppearances()
 
     # sortedElo = getFile(SORTED_CURRENT_ELO_PATH)
-    maxElo = 160 #sortedElo[0]['elo']
-    minElo = 30 #sortedElo[-1]['elo']
+    maxElo = 170 #sortedElo[0]['elo']
+    minElo = 10 #sortedElo[-1]['elo']
 
     # normalize
     minScore = math.inf
