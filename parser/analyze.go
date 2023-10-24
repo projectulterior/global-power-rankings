@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/minio/simdjson-go"
 )
@@ -73,7 +74,7 @@ func analyze(events simdjson.ParsedJson) (*Game, error) {
 		case ITEM_SOLD:
 		case SKILL_LEVEL_UP:
 		case STATS_UPDATE:
-			stats_update(&game, obj)
+			stats_update(&game, obj, t)
 		case SUMMONER_SPELL_USED:
 		case TURRET_PLATE_DESTROYED:
 		case WARD_KILLED:
@@ -102,7 +103,12 @@ func analyze(events simdjson.ParsedJson) (*Game, error) {
 	return &game, nil
 }
 
-func stats_update(game *Game, obj *simdjson.Object) {
+func stats_update(game *Game, obj *simdjson.Object, now time.Time) {
+	analyze_participants(game, obj, now)
+	analyze_teams(game, obj, now)
+}
+
+func analyze_participants(game *Game, obj *simdjson.Object, now time.Time) {
 	p := obj.FindKey("participants", nil)
 
 	participants, err := p.Iter.Array(nil)
@@ -122,17 +128,108 @@ func stats_update(game *Game, obj *simdjson.Object) {
 			break
 		}
 
-		e := obj.FindKey("participantID", nil)
-		participantID, err := e.Iter.Int()
+		pid := obj.FindKey("participantID", nil)
+		participantID, err := pid.Iter.Int()
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(participantID)
+
+		switch participantID {
+		case 1: // red top
+			analyze_participant(&game.Red.Top.Player, obj, now)
+		case 2: // red jg
+			analyze_participant(&game.Red.Jungle.Player, obj, now)
+		case 3: // red mid
+			analyze_participant(&game.Red.Mid.Player, obj, now)
+		case 4: // red adc
+			analyze_participant(&game.Red.Adc.Player, obj, now)
+		case 5: // red support
+			analyze_participant(&game.Red.Support.Player, obj, now)
+		case 6: // blue top
+			analyze_participant(&game.Blue.Top.Player, obj, now)
+		case 7: // blue jg
+			analyze_participant(&game.Blue.Jungle.Player, obj, now)
+		case 8: // blue mid
+			analyze_participant(&game.Blue.Mid.Player, obj, now)
+		case 9: // blue adc
+			analyze_participant(&game.Blue.Adc.Player, obj, now)
+		case 10: // blue support
+			analyze_participant(&game.Blue.Support.Player, obj, now)
+		}
 
 	}
 }
 
-func analyze_stats(game *Game, obj *simdjson.Object) {
+func analyze_participant(player *Player, obj *simdjson.Object, now time.Time) {
+	analyze_participant_stats(player, obj, now)
+
+	x := obj.FindKey("XP", nil)
+	xp, err := x.Iter.Int()
+	if err != nil {
+		panic(err)
+	}
+
+	player.XP.Set(int(xp), now)
+}
+
+func analyze_teams(game *Game, obj *simdjson.Object, now time.Time) {
+	t := obj.FindKey("teams", nil)
+	teams, err := t.Iter.Array(nil)
+	if err != nil {
+		panic(err)
+	}
+
+	iter := teams.Iter()
+	for {
+		typ := iter.Advance()
+		if typ != simdjson.TypeObject {
+			break
+		}
+
+		obj, err := iter.Object(nil)
+		if err != nil {
+			break
+		}
+
+		pid := obj.FindKey("teamID", nil)
+		teamID, err := pid.Iter.Int()
+		if err != nil {
+			panic(err)
+		}
+
+		analyze := func(team *Team) {
+			k := obj.FindKey("championsKills", nil)
+			kills, err := k.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+			team.KDA.Kill.Set(int(kills), now)
+
+			d := obj.FindKey("deaths", nil)
+			deaths, err := d.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+			team.KDA.Death.Set(int(deaths), now)
+
+			g := obj.FindKey("totalGold", nil)
+			gold, err := g.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+			team.Gold.Set(int(gold), now)
+		}
+		switch teamID {
+
+		case 100:
+			analyze(&game.Red)
+		case 200:
+			analyze(&game.Blue)
+		}
+	}
+}
+
+func analyze_participant_stats(player *Player, obj *simdjson.Object, now time.Time) {
 	s := obj.FindKey("stats", nil)
 	stats, err := s.Iter.Array(nil)
 	if err != nil {
@@ -159,13 +256,49 @@ func analyze_stats(game *Game, obj *simdjson.Object) {
 
 		switch name {
 		case "CHAMPIONS_KILLED":
-			v := obj.FindKey("vale", nil)
+			v := obj.FindKey("value", nil)
 			value, err := v.Iter.Int()
 			if err != nil {
 				panic(err)
 			}
-
-			fmt.Println("champion killed", value)
+			player.KDA.Kill.Set(int(value), now)
+		case "NUM_DEATHS":
+			v := obj.FindKey("value", nil)
+			value, err := v.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+			player.Death.Set(int(value), now)
+		case "ASSISTS":
+			v := obj.FindKey("value", nil)
+			value, err := v.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+			player.Assist.Set(int(value), now)
+		case "MINIONS_KILLED":
+			v := obj.FindKey("value", nil)
+			value, err := v.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+			player.CS.Set(int(value), now)
+		case "TOTAL_DAMAGE_DEALT_TO_OBJECTIVES":
+			v := obj.FindKey("value", nil)
+			value, err := v.Iter.Float()
+			if err != nil {
+				panic(err)
+			}
+			player.ObjectiveDamage.Set(value, now)
+		case "VISION_SCORE":
+			v := obj.FindKey("value", nil)
+			value, err := v.Iter.Int()
+			if err != nil {
+				panic(err)
+			}
+			player.VisionScore.Set(int(value), now)
+		default:
+			// not handled
 		}
 	}
 }
