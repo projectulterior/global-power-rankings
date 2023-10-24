@@ -43,10 +43,9 @@ class EloDBQuery:
         return self
 
 class EloDB:
-    def __init__(self, ):
-        self.eloDB = {}
+    def __init__(self, eloDB=None):
+        self.eloDB = {} if eloDB == None else eloDB
         self.gameCount = {}
-        self.decayFn = lambda x: 0 if x not in self.gameCount else -self.gameCount[x] / 100
 
     def get(self, ELODBQuery):
         if ELODBQuery.teamID is None:
@@ -98,16 +97,16 @@ class EloDB:
         if ELODBQuery.limit is not None:
             eloHistory = eloHistory[:ELODBQuery.limit]
 
-        return eloHistory[startIndex:endIndex + 1]
+        return eloHistory[startIndex:endIndex + 1].copy()
     
     def getCurrent(self, teamID):
         if teamID not in self.eloDB:
             return None
         
-        return self.eloDB[teamID][-1]
+        return self.eloDB[teamID][-1].copy()
     
     def getAll(self):
-        return self.eloDB
+        return self.eloDB.copy()
 
     def insert(self, ID, timestamp, elo, metadata=None):
         if ID not in self.eloDB:
@@ -150,6 +149,7 @@ class EloGenerator:
 #         {
 #             'timestamp': 01/01/2001,
 #             'elo': 1500
+#             'gameID': 1234, 
 #             'metadata: anything
 #         },
 #         {
