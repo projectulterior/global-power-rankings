@@ -3,30 +3,33 @@ import json
 import math
 
 
-tournamentPath = './flat_games.json'
+gamesPath = './data/games.json'
 
-fd = os.open(tournamentPath, os.O_RDONLY)
-tournaments = os.read(fd, os.path.getsize(tournamentPath))
-tournaments = json.loads(tournaments)
+fd = os.open(gamesPath, os.O_RDONLY)
+games = os.read(fd, os.path.getsize(gamesPath))
+games = json.loads(games)
+# print(games)
 os.close(fd)
 
-INIT_K = 4
+INIT_K = 8
 MIN_K = 4
+DECAY_RATE = 2
 DEFAULT_ELO = 1500
 
 eloDB = {}
 gameCount = {}
-for gameID, gameResult in tournaments.items():
-    redTeam = gameResult['red']
-    blueTeam = gameResult['blue']
-    winner = gameResult['winner']
+for game in games:
+    redTeam = game['red_id']
+    blueTeam = game['blue_id']
+    winner = game['winner']
 
-    kFactor_RED = (INIT_K - MIN_K) * math.e ** (0 if redTeam not in gameCount else -gameCount[redTeam] / 100) + MIN_K
-    kFactor_BLUE = (INIT_K - MIN_K) * math.e ** (0 if blueTeam not in gameCount else -gameCount[blueTeam] / 100) + MIN_K
+    kFactor_RED = (INIT_K - MIN_K) * DECAY_RATE ** (0 if redTeam not in gameCount else -gameCount[redTeam] / 100) + MIN_K
+    kFactor_BLUE = (INIT_K - MIN_K) * DECAY_RATE ** (0 if blueTeam not in gameCount else -gameCount[blueTeam] / 100) + MIN_K
 
     currentRedElo = eloDB[redTeam] if redTeam in eloDB else DEFAULT_ELO
     currentBlueElo = eloDB[blueTeam] if blueTeam in eloDB else DEFAULT_ELO
 
+    print(currentRedElo, currentBlueElo)
     expectedRed = 1 / (1 + 10 ** ((currentRedElo - currentBlueElo) / 400))
     expectedBlue = 1 / (1 + 10 ** ((currentBlueElo - currentRedElo) / 400))
 
@@ -45,7 +48,7 @@ for gameID, gameResult in tournaments.items():
 
 teamPath = './data/teams.json'
 fd = os.open(teamPath, os.O_RDONLY)
-teams = os.read(fd, os.path.getsize(tournamentPath))
+teams = os.read(fd, os.path.getsize(gamesPath))
 teams = json.loads(teams)
 os.close(fd)
 
