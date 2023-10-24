@@ -14,6 +14,13 @@ WEIGHTS = {
     'westernRegionGamesTier2': 2,
     'easternRegionWinsTier2': 3,
     'westernRegionWinsTier2': 2,
+    'topKDA': 1,
+    'jungleKDA': 2,
+    'midKDA': 3,
+    'adcKDA': 4,
+    'supportKDA': 5,
+    'teamGold': 6,
+
 }
 
 worlds = set(["108998961191900167", "106926282333089592", "104841804583318464"])
@@ -45,6 +52,13 @@ def getAppearances():
             'westernRegionGamesTier2': 0,
             'easternRegionWinsTier2': 0,
             'westernRegionWinsTier2': 0,
+            'topKDA': 0,
+            'jungleKDA': 0,
+            'midKDA': 0,
+            'adcKDA': 0,
+            'supportKDA': 0,
+            'redGold': 0,
+
         } if redTeamID not in toRet else toRet[redTeamID]
 
         toAddBlue = {
@@ -58,6 +72,13 @@ def getAppearances():
             'westernRegionGamesTier2': 0,
             'easternRegionWinsTier2': 0,
             'westernRegionWinsTier2': 0,
+            'topKDA': 0,
+            'jungleKDA': 0,
+            'midKDA': 0,
+            'adcKDA': 0,
+            'supportKDA': 0,
+            'blueGold': 0,
+            
         } if blueTeamID not in toRet else toRet[blueTeamID]
 
         # tournament appearances
