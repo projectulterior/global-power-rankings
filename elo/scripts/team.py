@@ -16,7 +16,7 @@ DEFAULT_ELO = 1500
 MAIN_PATH = './data/'
 TOURNAMENT_PATH = MAIN_PATH + 'tournaments.json'
 TEAM_PATH = MAIN_PATH + 'teams.json'
-GAME_PATH = MAIN_PATH + 'games_ts.json'
+GAME_PATH = MAIN_PATH + 'analysis/games_kda.json'
 REGION_PATH = MAIN_PATH + 'team_region.json'
 
 TEAM_ELO_PATH = MAIN_PATH + 'elo/elo.json'
