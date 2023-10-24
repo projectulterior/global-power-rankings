@@ -26,3 +26,9 @@ benchmark:
 
 fast:
 	cd fast && go run ./...
+
+zip:
+	gzip data/analysis/games_kda.json
+
+unzip:
+	gzip -d data/analysis/games_kda.json.gz
