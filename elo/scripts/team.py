@@ -72,7 +72,7 @@ def getRegularizedELOs():
 gameCount = {}
 bucket = [None] * 100
 for game in games:
-    if game['end_time'] < '2022-01-01':
+    if game['end_time'] < '2021-01-01':
         continue
 
     redTeam = game['red_id']
