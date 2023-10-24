@@ -2,4 +2,4 @@ data/games/
 
 __pycache__/
 
-data/games_kda.json
+data/analysis/*.json

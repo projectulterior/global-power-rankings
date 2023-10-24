@@ -28,7 +28,8 @@ fast:
 	cd fast && go run ./...
 
 zip:
-	gzip data/analysis/games_kda.json
+	gzip --keep data/analysis/games_kda.json
+	gzip --keep data/analysis/games.json
 
 unzip:
 	gzip -d data/analysis/games_kda.json.gz
