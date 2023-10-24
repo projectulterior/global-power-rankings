@@ -1,7 +1,10 @@
 import json
 from util import getFile, writeFile, regularize, sigmaRegularization, winProb
-from team import GAME_PATH, SORTED_CURRENT_ELO_PATH, INITIAL_ELO_PATH
 import math
+
+GAME_PATH = './data/analysis/games_kda.json'
+SORTED_CURRENT_ELO_PATH = './data/elo/sorted_elo.json'
+INITIAL_ELO_PATH = './data/initial_elo.json'
 
 WEIGHTS = {
     'worlds': 50,
@@ -14,13 +17,12 @@ WEIGHTS = {
     'westernRegionGamesTier2': 2,
     'easternRegionWinsTier2': 3,
     'westernRegionWinsTier2': 2,
-    'topKDA': 1,
-    'jungleKDA': 2,
-    'midKDA': 3,
-    'adcKDA': 4,
-    'supportKDA': 5,
-    'teamGold': 6,
-
+    'topKDA': 0,
+    'jungleKDA': 0,
+    'midKDA': 0,
+    'adcKDA': 0,
+    'supportKDA': 0,
+    'teamGold': 0,
 }
 
 worlds = set(["108998961191900167", "106926282333089592", "104841804583318464"])
@@ -30,6 +32,7 @@ westernRegionTier2 = set(["PCS", "VCS", "LJL"]) #1
 easternRegionTier1 = set(["LCS", "LEC"]) #3
 easternRegionTier2 = set(["CBLOL", "LLA"]) #1
 semileague = ["CHALLENGER", "MASTERS", "ACADEMY"]
+positions = ["top", "jungle", "mid", "adc", "support"]
 
 
 def getAppearances():
@@ -57,7 +60,8 @@ def getAppearances():
             'midKDA': 0,
             'adcKDA': 0,
             'supportKDA': 0,
-            'redGold': 0,
+            'teamGold': 0,
+            'updates': 0,
 
         } if redTeamID not in toRet else toRet[redTeamID]
 
@@ -77,7 +81,8 @@ def getAppearances():
             'midKDA': 0,
             'adcKDA': 0,
             'supportKDA': 0,
-            'blueGold': 0,
+            'teamGold': 0,
+            'updates': 0
             
         } if blueTeamID not in toRet else toRet[blueTeamID]
 
@@ -118,6 +123,48 @@ def getAppearances():
         if league in easternRegionTier2:
             updateRegionGameStats('easternRegionGamesTier2', winner)
 
+        # kdas
+        # TODO: average it out instead
+        toAddRed['updates'] += 1
+        toAddBlue['updates'] += 1
+
+        def updateKDAStats(position: str, team: str, kda: float):
+            if team == 'red':
+                toAddRed[position + 'KDA'] += (kda - toAddRed[position + 'KDA']) / toAddRed['updates']
+            else:
+                toAddBlue[position + 'KDA'] += (kda - toAddBlue[position + 'KDA']) / toAddBlue['updates']
+        
+        # TODO: average it out instead
+        def updateTeamGoldStats(team: str, gold: int):
+            if team == 'red':
+                toAddRed['teamGold'] += (gold - toAddRed['teamGold']) / toAddRed['updates']
+            else:
+                toAddBlue['teamGold'] += (gold - toAddBlue['teamGold']) / toAddBlue['updates']
+
+
+        def getTeamKDA(team: str):
+            kills = 0
+            deaths = 0
+            for pos in positions:
+                currentKills = game[team + '_' + pos + '_kills'] if (team + '_' + pos + '_kills') in game is not None else 0
+                currentAssists = game[team + '_' + pos + '_assists'] if (team + '_' + pos + '_assists') in game is not None else 0
+                currentDeaths = game[team + '_' + pos + '_deaths'] if (team + '_' + pos + '_deaths') in game is not None else 0
+                kills += currentKills + currentAssists
+                deaths += currentDeaths 
+            return kills / deaths if deaths != 0 else kills
+
+
+        for pos in positions:
+            redKDA = getTeamKDA('red')
+            blueKDA = getTeamKDA('blue')
+
+            # if redKDA != 0 and blueKDA != 0:
+            #     print(redKDA, blueKDA)
+            updateKDAStats(pos, 'red', redKDA)
+            updateKDAStats(pos, 'blue', blueKDA)
+            updateTeamGoldStats('red', game['red_gold'] if 'red_gold' in game else 0)
+            updateTeamGoldStats('blue', game['blue_gold'] if 'blue_gold' in game else 0)
+
         toRet[redTeamID] = toAddRed
         toRet[blueTeamID] = toAddBlue
     return toRet
@@ -132,11 +179,10 @@ def createInitialScores():
     toRet = {}
 
     appearances = getAppearances()
-    print(appearances)
 
-    sortedElo = getFile(SORTED_CURRENT_ELO_PATH)
-    maxElo = sortedElo[0]['elo']
-    minElo = sortedElo[-1]['elo']
+    # sortedElo = getFile(SORTED_CURRENT_ELO_PATH)
+    maxElo = 170 #sortedElo[0]['elo']
+    minElo = 10 #sortedElo[-1]['elo']
 
     # normalize
     minScore = math.inf
@@ -160,7 +206,6 @@ def createInitialScores():
     return toRet
 
 scoreMap = createInitialScores()
-print(scoreMap)
 writeFile(INITIAL_ELO_PATH, scoreMap)
         
 
