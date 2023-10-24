@@ -32,5 +32,8 @@ zip:
 	gzip --keep data/analysis/games.json
 
 unzip:
-	gzip --keep -d data/analysis/games_kda.json.gz
-	gzip --keep -d data/analysis/games.json.gz
+	gzip -d data/analysis/games_kda.json.gz
+
+initElo:
+	if [ -f data/elo/inital_elo.json ]; then rm data/elo/inital_elo.json; fi
+	python3 ./elo/scripts/appearances.py

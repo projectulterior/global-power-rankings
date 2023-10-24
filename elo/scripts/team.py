@@ -24,6 +24,7 @@ REGION_ELO_PATH = MAIN_PATH + 'elo/region_elo.json'
 SORTED_CURRENT_ELO_PATH = MAIN_PATH + 'elo/sorted_elo.json'
 SORTED_REGION_ELO_PATH = MAIN_PATH + 'elo/sorted_region_elo.json'
 PREDICTIONS_PATH = MAIN_PATH + 'elo/predictions.json'
+INITIAL_ELO_PATH = MAIN_PATH + 'initial_elo.json'
 
 REGION_K = 4
 
@@ -36,12 +37,12 @@ INIT_SIGMA = INIT_MU / 3
 INIT_REGION_MU = 5
 INIT_REGION_SIGMA = INIT_REGION_MU / 2
 
-
 games = getFile(GAME_PATH)
 games = list(filter(lambda x: x.get('end_time') is not None, games))
 games.sort(key=lambda x: x['end_time'])
 teams = getFile(TEAM_PATH)
 regions = getFile(REGION_PATH)
+initELO = getFile(INITIAL_ELO_PATH)
 
 def getRegularizedELOs():
     sum = 0
@@ -100,8 +101,10 @@ for game in games:
         blueRegionBuff *= BUFF_MULTIPLER
         redRegionBuff *= BUFF_MULTIPLER
 
-    currentRedMU = (teamDB.getCurrent(redTeam)['elo'] if redTeam in teamDB.eloDB else INIT_MU)
-    currentBlueMU = (teamDB.getCurrent(blueTeam)['elo'] if blueTeam in teamDB.eloDB else INIT_MU)
+    currentRedMU = (teamDB.getCurrent(redTeam)['elo'] if redTeam in teamDB.eloDB else initELO[redTeam] if redTeam in initELO else INIT_MU)
+    # currentRedMU = (teamDB.getCurrent(redTeam)['elo'] if redTeam in teamDB.eloDB else INIT_MU)
+    currentBlueMU = (teamDB.getCurrent(blueTeam)['elo'] if blueTeam in teamDB.eloDB else initELO[blueTeam] if blueTeam in initELO else INIT_MU)
+    # currentBlueMU = (teamDB.getCurrent(blueTeam)['elo'] if blueTeam in teamDB.eloDB else INIT_MU)
     currentRedSIGMA = (teamDB.getCurrent(redTeam)['metadata']['sigma'] if redTeam in teamDB.eloDB else INIT_SIGMA)
     currentBlueSIGMA = (teamDB.getCurrent(blueTeam)['metadata']['sigma'] if blueTeam in teamDB.eloDB else INIT_SIGMA)
     buffedRedELO = Rating(currentRedMU + redRegionBuff, currentRedSIGMA)
@@ -110,7 +113,7 @@ for game in games:
     # for prediction purposes
     regularELOS = getRegularizedELOs()
 
-    if redTeam in regularELOS and blueTeam in regularELOS and game['end_time'] >= '2022-01-01':
+    if redTeam in regularELOS and blueTeam in regularELOS and game['end_time'] >= '2021-07-01':
         redWinPercent = math.floor(winProb(
                 Rating(regularELOS[redTeam]['elo'], regularELOS[redTeam]['metadata']['sigma']), 
                 Rating(regularELOS[blueTeam]['elo'], regularELOS[blueTeam]['metadata']['sigma'])
@@ -156,10 +159,15 @@ for game in games:
 writeFile(PREDICTIONS_PATH, bucket)
 
 # write sorted elos for each team
+teamNames = {}
+for team in teams:
+    teamNames[team['team_id']] = team['name']
+
 sortedELOS = []
 for teamID in teamDB.eloDB.keys():
     currentELO = teamDB.getCurrent(teamID)
     currentELO['id'] = teamID
+    currentELO['name'] = teamNames[teamID] if teamID in teamNames else ""
     sortedELOS.append(currentELO)
 sortedELOS.sort(key=lambda x: x['elo'], reverse=True)
 writeFile(SORTED_CURRENT_ELO_PATH, sortedELOS)
