@@ -38,5 +38,4 @@ Support
 - Wards placed
     - vision score
 - Kill participation
-- 
 
