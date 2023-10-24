@@ -27,4 +27,4 @@ def calculate_elos(k, default=1500):
             elos[blue].append({"elo": blueElo, "timestamp": timestamp})
     return elos
 
-write('data/elos.json', calculate_elos(4))
+write('data/elos.json', calculate_elos(100))
