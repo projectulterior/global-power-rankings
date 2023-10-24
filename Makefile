@@ -31,4 +31,4 @@ zip:
 	gzip data/analysis/games_kda.json
 
 unzip:
-	gzip -d data/analysis/games_kda.json.gz
+	gzip --keep -d data/analysis/games_kda.json.gz
