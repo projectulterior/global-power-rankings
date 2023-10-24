@@ -17,40 +17,24 @@ const WORKERS = 30
 
 func run() {
 	games := parse[map[string]any](GAMES_FILE)
+	mapping := parse[map[string]any](MAPPING_FILE)
 
 	var wg sync.WaitGroup
 	sema := make(chan struct{}, WORKERS)
 
 	var count atomic.Int32
 
-	// data := make(chan *Game, WORKERS)
-	// go func() {
-	// 	toRet := []map[string]any{}
-	// 	for game := range data {
-	// 		currentGame := games[i]
-	// 		game["start_time"] = gameTimes.Start
-	// 		game["end_time"] = gameTimes.End
-	// 	}
-
-	// 	b, err := json.Marshal(games)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	write(OUTPUT_PATH, bytes.NewBuffer(b))
-	// }()
-
 	start := time.Now()
-	for i, g := range games {
+	for i, g := range games[:100] {
 		wg.Add(1)
 		sema <- struct{}{}
-		go func(index int, game map[string]any) {
+		go func(index int, game map[string]any, mapping []map[string]any) {
 			defer wg.Done()
 			defer func() { <-sema }()
 
 			gameID := game["id"].(string)
 
-			parsed, err := simdParse(fmt.Sprintf("%s/%s.json", GAMES_DIRECTIORY, gameID))
+			parsed, err := simdParse(getGamePath(gameID))
 			if parsed == nil {
 				fmt.Printf("parsed is null -- %s\n", err)
 				return
@@ -62,7 +46,7 @@ func run() {
 				return
 			}
 
-			gameTimes, err := simdAnal(*parsed)
+			gameTimes, err := analyze(*parsed)
 			if err != nil {
 				fmt.Printf("analysis error -- %s\n", err)
 			}
@@ -70,7 +54,7 @@ func run() {
 			currentGame := games[index]
 			currentGame["start_time"] = gameTimes.Start
 			currentGame["end_time"] = gameTimes.End
-		}(i, g)
+		}(i, g, mapping)
 
 		if i%100 == 0 {
 			fmt.Printf("checkpoint -- %d -- %s\n", i, time.Since(start))
@@ -87,33 +71,6 @@ func run() {
 	write(OUTPUT_PATH, bytes.NewBuffer(b))
 	fmt.Printf("errors: %d -- %s\n", count.Load(), time.Since(start))
 	fmt.Println("------------")
-}
-
-func strategicGetGame(gameID string, unmarshalFn func(any, bytes.Buffer) error) Events {
-	return strategicParse[Event](fmt.Sprintf("%s/%s.json", GAMES_DIRECTIORY, gameID), unmarshalFn)
-}
-
-// Parse functions
-func strategicParse[T any](path string, unmarshalFn func(any, bytes.Buffer) error) []T {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil
-	}
-	defer file.Close()
-
-	var buf bytes.Buffer
-	_, err = io.Copy(&buf, file)
-	if err != nil {
-		panic(err)
-	}
-
-	var data []T
-	err = unmarshalFn(&data, buf)
-	if err != nil {
-		fmt.Printf("error unmarshaling -- %s", err)
-	}
-
-	return data
 }
 
 func simdParse(path string) (*simd.ParsedJson, error) {
